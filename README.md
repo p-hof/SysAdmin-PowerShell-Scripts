@@ -87,6 +87,17 @@ This makes the script suitable for unattended NinjaOne execution as **SYSTEM**.
 
 ## Recommended NinjaOne deployment
 
+### Preferred: Automation Library / Run Automation
+
+For production deployment, save `Clear-SystemState.ps1` in the NinjaOne Automation Library and run it using **Run Automation -> Script** as SYSTEM. This is preferable to manually pasting a long script into the remote PowerShell terminal.
+
+### Remote System PowerShell console
+
+NinjaOne's System PowerShell option is an interactive PowerShell console. Version 2.0.1 wraps the script body in an outer `& { ... }` script block so that, when the **entire script is pasted at once**, PowerShell keeps parsing the complete block before executing it. This avoids the common interactive-paste problem where an `if` block can execute before a following `else` line is received.
+
+If using the remote console, paste the entire script in one operation rather than pasting individual sections.
+
+
 Deploy the script using the normal NinjaOne PowerShell / System context.
 
 Recommended settings:

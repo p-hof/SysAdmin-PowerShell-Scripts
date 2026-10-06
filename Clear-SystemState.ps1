@@ -41,6 +41,8 @@
         VSS writer status could not be verified.
 #>
 
+& {
+
 # ============================================================
 # CONFIGURATION
 # ============================================================
@@ -82,7 +84,7 @@ $ErrorActionPreference = "Continue"
 $ProgressPreference = "SilentlyContinue"
 
 $ScriptName = "Clear-SystemState.ps1"
-$ScriptVersion = "2.0.0"
+$ScriptVersion = "2.0.1"
 $StartTime = Get-Date
 
 $LogRoot = Join-Path $env:ProgramData "Cove-VSS-Remediation"
@@ -640,20 +642,20 @@ function Show-RecentVssEvents {
                 -MaxEvents 300 `
                 -ErrorAction Stop
 
-            foreach ($event in $events) {
-                $provider = [string]$event.ProviderName
-                $message = [string]$event.Message
+            foreach ($logEvent in $events) {
+                $provider = [string]$logEvent.ProviderName
+                $message = [string]$logEvent.Message
 
                 if (
                     $provider -match "(?i)VSS|Volsnap|Backup" -or
                     $message -match "(?i)volume shadow|shadow copy|\bVSS\b"
                 ) {
                     $results.Add([pscustomobject]@{
-                        TimeCreated  = $event.TimeCreated
+                        TimeCreated  = $logEvent.TimeCreated
                         LogName      = $logName
                         ProviderName = $provider
-                        Id           = $event.Id
-                        Level        = $event.LevelDisplayName
+                        Id           = $logEvent.Id
+                        Level        = $logEvent.LevelDisplayName
                         Message      = $message
                     })
                 }
@@ -675,8 +677,8 @@ function Show-RecentVssEvents {
         return
     }
 
-    foreach ($event in $results) {
-        $message = ($event.Message -replace "\r?\n", " " -replace "\s{2,}", " ").Trim()
+    foreach ($logEvent in $results) {
+        $message = ($logEvent.Message -replace "\r?\n", " " -replace "\s{2,}", " ").Trim()
 
         if ($message.Length -gt 500) {
             $message = $message.Substring(0, 500) + "..."
@@ -685,11 +687,11 @@ function Show-RecentVssEvents {
         Write-Host ""
         Write-Host (
             "  [{0}] {1} | {2} | Event {3} | {4}" -f `
-            $event.Level,
-            $event.TimeCreated,
-            $event.ProviderName,
-            $event.Id,
-            $event.LogName
+            $logEvent.Level,
+            $logEvent.TimeCreated,
+            $logEvent.ProviderName,
+            $logEvent.Id,
+            $logEvent.LogName
         ) -ForegroundColor Yellow
 
         Write-Host "      $message"
@@ -819,21 +821,21 @@ else {
 }
 
 if ($RunDISMRestoreHealth) {
-    $dismExit = Invoke-DISMRestoreHealth
+    $null = Invoke-DISMRestoreHealth
 }
 else {
     Write-Step "[SKIP] DISM RestoreHealth is disabled."
 }
 
 if ($RunSFC) {
-    $sfcExit = Invoke-SystemFileChecker
+    $null = Invoke-SystemFileChecker
 }
 else {
     Write-Step "[SKIP] System File Checker is disabled."
 }
 
 if ($RunComponentCleanup) {
-    $cleanupExit = Invoke-ComponentCleanup
+    $null = Invoke-ComponentCleanup
 }
 else {
     Write-Step "[SKIP] Component-store cleanup is disabled."
@@ -921,3 +923,4 @@ if ($TranscriptStarted) {
 }
 
 exit $finalExitCode
+}
